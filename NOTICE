@@ -1,8 +1,8 @@
-SWITCH_RESET
+CLEANSWEEP
 Copyright (C) 2026 Drew Robinson. MPL-2.0 (LICENSE).
 
 It is built on felucca-bsp (https://github.com/hugelton/felucca-bsp, in bsp/), Copyright (C) 2026 Leo Kuroshita
-(Hügelton Instruments) and contributors, MPL-2.0; see bsp/NOTICE for what that includes. firmware/switch_reset.c
+(Hügelton Instruments) and contributors, MPL-2.0; see bsp/NOTICE for what that includes. firmware/cleansweep.c
 follows felucca-bsp's examples/hwtest. tools/lz4blk.py and the loader wrapping in tools/build.py are from fm1-base
 (https://github.com/charlesvestal/fm1-base), Copyright (C) 2026 Charles Vestal and Leo Kuroshita, MPL-2.0.
 
@@ -12,8 +12,10 @@ Apache License, Version 2.0 (LICENSES/Apache-2.0.txt; m-vave/fm1_open, THIRD_PAR
 file for it. Each package also carries three files of JieLi's AC79 SDK (uboot.boot, cfg_tool.bin, eq_cfg_hw.bin),
 Apache-2.0.
 
-The screen's words are drawn in Inter Tight by The Inter Project Authors, SIL Open Font License 1.1
-(assets/fonts/OFL.txt). Only pictures of the text are in the firmware.
+The screen's words are drawn in Cooper Hewitt italic, by Chester Jenkins for the Cooper Hewitt, Smithsonian Design
+Museum, Copyright (c) 2014, with Reserved Font Name Cooper Hewitt, SIL Open Font License 1.1 (assets/fonts/OFL.txt,
+LICENSES/OFL-CooperHewitt.txt). The font files are unmodified; only pictures of the text are in the firmware. The
+screen's colours follow FM-SWITCH's launch screen.
 
-"M-VAVE" and "FM-1" are trademarks of their respective owners. SWITCH_RESET is not affiliated with, endorsed by or
+"M-VAVE" and "FM-1" are trademarks of their respective owners. CLEANSWEEP is not affiliated with, endorsed by or
 supported by them.

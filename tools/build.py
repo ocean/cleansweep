@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MPL-2.0
 # Copyright (C) 2026 Drew Robinson
-"""Build SWITCH_RESET: build/switch-reset.bin (the app), build/loader/ota.bin (felucca-bsp's update loader) and
-build/switch-reset.fwsc (the package any FM-1 installer takes).
+"""Build CLEANSWEEP: build/cleansweep.bin (the app), build/loader/ota.bin (felucca-bsp's update loader) and
+build/cleansweep.fwsc (the package any FM-1 installer takes).
 
   uv run tools/build.py [--release N]
 
@@ -38,7 +38,7 @@ LOADER_LOAD = 0x01C0A800
 LOADER_NAME = b"usb_hid_ota.bin"    # the file name the SPL looks for
 CFLAGS = ["-Os", "-ffunction-sections", "-fno-builtin", "-Wall", "-Werror", "-Wno-unused-function"]
 INC = ["-Ibsp/chip", "-Ibsp/boards/fm1", "-Ibuild/gen"]
-NAME = "switch-reset"
+NAME = "cleansweep"
 
 
 def lock(name):
@@ -141,10 +141,10 @@ def build_app(product):
     for s in ("crt0.S", "fm1_vec.S", "fm1_isr.S"):
         tc("cc", "-c", BSP / "chip" / s, "-o", o / (s[:-2] + ".o"))
         objs.append(o / (s[:-2] + ".o"))
-    tc("cc", *CFLAGS, *INC, f'-DFELUCCA_ID="{product}"', "-c", ROOT / "firmware" / "switch_reset.c",
-       "-o", o / "switch_reset.o")
+    tc("cc", *CFLAGS, *INC, f'-DFELUCCA_ID="{product}"', "-c", ROOT / "firmware" / "cleansweep.c",
+       "-o", o / "cleansweep.o")
     elf = o / f"{NAME}.elf"
-    tc("pi32v2/bin/ld", "-T", ROOT / "firmware" / "app.ld", *objs, o / "switch_reset.o", "-o", elf)
+    tc("pi32v2/bin/ld", "-T", ROOT / "firmware" / "app.ld", *objs, o / "cleansweep.o", "-o", elf)
     for sec, f in ((".text", "text.bin"), (".data", "data.bin"), (".ram_text", "rt.bin")):
         tc("common/bin/objcopy", "-O", "binary", "-j", sec, elf, o / f)
     syms = tc("common/bin/objdump", "-t", elf)

@@ -1,8 +1,8 @@
-# SWITCH_RESET's build tools (tools/gen_screens.py draws the screen's text with Pillow). Not a package: uv keeps
+# CLEANSWEEP's build tools (tools/gen_screens.py draws the screen's text with Pillow). Not a package: uv keeps
 # .venv in step with uv.lock, which pins every file by hash.
 #   uv sync --frozen
 [project]
-name = "switch-reset-tools"
+name = "cleansweep-tools"
 version = "0.1"
 requires-python = "==3.14.*"
 dependencies = [

@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: MPL-2.0
  * Copyright (C) 2026 Drew Robinson */
-/* The reset itself, with no hardware in it: the firmware (switch_reset.c) and the host test (tests/reset_test.c)
+/* The reset itself, with no hardware in it: the firmware (cleansweep.c) and the host test (tests/reset_test.c)
  * give it the flash.
  *
  * It brings [RS_LO, RS_HI) to one picture: V15's factory USR data (usr_data.h) at USR_DATA_BASE, every other byte

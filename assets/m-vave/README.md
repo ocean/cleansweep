@@ -1,6 +1,6 @@
 # Official FM-1 V15 firmware (M-VAVE, Apache-2.0)
 
-`FM-1_015.fwsc` is M-VAVE's official FM-1 firmware V15, unmodified. SWITCH_RESET doesn't install it: the build
+`FM-1_015.fwsc` is M-VAVE's official FM-1 firmware V15, unmodified. CLEANSWEEP doesn't install it: the build
 (`tools/usr_data.py`) takes V15's factory USR data (its voices and settings, 73,226 bytes) out of it, checks it and
 puts it in the firmware, which writes it at 0xEA000.
 

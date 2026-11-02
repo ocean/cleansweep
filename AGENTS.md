@@ -1,12 +1,14 @@
-# AGENTS.md: working on SWITCH_RESET
+# AGENTS.md: working on CLEANSWEEP
 
-SWITCH_RESET is a tiny FM-1 firmware that clears saved data left by earlier firmwares (README.md says what and why).
+CLEANSWEEP is a tiny FM-1 firmware that clears saved data left by earlier firmwares (README.md says what and why).
 It's maintained by Drew Robinson (GitHub `ocean`), built by the ESTAMPIE agent session, and tracked in kata
 (project `fm-1`, issue `magt`, labels `estampie`, `fm1kit`, `fm-switch`).
 
 - **It erases flash.** Only [0x93000, 0xFC000) may ever be erased or programmed: `FL_RANGE_OK` in
-  `firmware/switch_reset.c` makes the flash driver refuse anything else. Don't widen it without Drew.
+  `firmware/cleansweep.c` makes the flash driver refuse anything else. Don't widen it without Drew.
 - **Tests before every commit:** `tests/run_tests.sh`, and `uv run tools/build.py` must build.
+- **The look:** `firmware/look.c` and `firmware/lights.c` hold no hardware; `uv run tools/preview.py` shows a start
+  as the firmware draws it. The words are Cooper Hewitt italic, pinned by SHA-256 in `tools/gen_screens.py`.
 - **Hardware** is tested by Drew only (HARDWARE_TESTING.md). Say plainly what has only been tested on the computer.
 - **Spelling:** Australian/British English. A one-line comment ends with a full stop.
 - **Git:** `git --no-pager ...`; commits as drew.robinson@gmail.com; messages in prose. Creating the GitHub

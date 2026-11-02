@@ -1,10 +1,11 @@
 /* SPDX-License-Identifier: MPL-2.0
  * Copyright (C) 2026 Drew Robinson
  * After felucca-bsp's examples/hwtest (Leo Kuroshita, Hügelton Instruments, MPL-2.0). */
-/* SWITCH_RESET: clears what earlier firmwares left in the FM-1's flash, then waits for the next firmware.
+/* CLEANSWEEP: clears what earlier firmwares left in the FM-1's flash, then waits for the next firmware.
  *
- * At every start, before USB is up: the power-on light sweep, then reset_core.c brings [0x93000, 0xFC000) to V15's
- * factory USR data at 0xEA000 and erased flash everywhere else, and says so on the screen. The flash driver itself
+ * At every start, before USB is up: CLEAN and SWEEP zip onto the screen while a light runs round the keys and
+ * buttons (look.c, lights.c), then reset_core.c brings [0x93000, 0xFC000) to V15's factory USR data at 0xEA000 and
+ * erased flash everywhere else, a fizzing bar showing how far it is, and the screen says when it's done. The flash driver itself
  * refuses anything outside that range (FL_RANGE_OK below): the boot area, this firmware's own image, Felucca's store
  * at 0xFC000 (where Melodee and LOOM keep Bluetooth) and 0xFF000 can't be touched. No sound: the audio path is never
  * started and the codec is held off.
@@ -21,7 +22,7 @@
 #define FELUCCA_ID "FM-1_379000"      /* the identity the installer sees, == the package's (tools/build.py) */
 #endif
 #define FELUCCA_USB_MANUFACTURER "M-VAVE"
-#define FELUCCA_USB_PRODUCT "FM-1 SWITCH RESET"
+#define FELUCCA_USB_PRODUCT "FM-1 CLEANSWEEP"
 #define RING_PUBLISH() __asm__ volatile("" ::: "memory")
 #include "fm1_time.h"
 #include "fm1_sys.h"
@@ -40,6 +41,8 @@
 #include "usr_data.h"                  /* tools/usr_data.py: V15's factory USR data */
 #include "screens.h"                   /* tools/gen_screens.py: the words */
 #include "../firmware/reset_core.c"
+#include "../firmware/look.c"
+#include "../firmware/lights.c"
 
 extern uint32_t _data_start[], _data_end[], _data_load[], _bss_start[], _bss_end[];
 extern uint32_t _rt_start[], _rt_end[], _rt_load[];   /* code that runs from RAM: the flash driver (fm1_flash.h) */
@@ -76,9 +79,6 @@ static void wait_ms(uint32_t n)
 }
 
 /* ---- screen: ST7789 240x240, RGB565 sent high byte first ---- */
-#define C(x) ((uint16_t)((((x) >> 8) | ((x) << 8)) & 0xFFFFu))
-static uint16_t row_px[240];
-
 static void lcd_cmd(uint8_t c, const uint8_t *d, uint32_t n)
 {
     static uint8_t buf[4];
@@ -112,7 +112,8 @@ static void lcd_init(void)
     fm1_lcd_baud(4);
 }
 
-static void lcd_window(uint32_t x, uint32_t y, uint32_t w, uint32_t h)
+/* look.c's hooks */
+static void lk_window(uint32_t x, uint32_t y, uint32_t w, uint32_t h)
 {
     uint8_t a[4];
     a[0] = 0; a[1] = (uint8_t)x; a[2] = 0; a[3] = (uint8_t)(x + w - 1u);
@@ -122,85 +123,55 @@ static void lcd_window(uint32_t x, uint32_t y, uint32_t w, uint32_t h)
     lcd_cmd(0x2C, 0, 0);
 }
 
-static void lcd_row(uint32_t w)
+static void lk_row(uint16_t *px, uint32_t w)
 {
-    fm1_lcd_send_data(row_px, w * 2u);
+    uint32_t i;
+    for (i = 0; i < w; i++)                     /* high byte first */
+        px[i] = (uint16_t)(px[i] >> 8 | px[i] << 8);
+    fm1_lcd_send_data(px, w * 2u);
     fm1_lcd_wait();
     fm1_lcd_deselect();
 }
 
-static void lcd_rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint16_t rgb)
+static uint32_t lk_ms(void) { return ms; }
+
+/* ---- the lights (lights.c): the show at power-on, PLAY's flashes when it's done ---- */
+static uint32_t lt_t0;
+static int (*lt_now)(uint32_t, uint8_t *);      /* the show running, or 0 */
+
+static void lights_start(int (*show)(uint32_t, uint8_t *))
 {
-    uint32_t i;
-    for (i = 0; i < w; i++)
-        row_px[i] = C(rgb);
-    lcd_window(x, y, w, h);
-    for (i = 0; i < h; i++)
-        lcd_row(w);
+    lt_t0 = ms;
+    lt_now = show;
 }
 
-static uint16_t grey(uint32_t level)            /* 0..15 -> RGB565, pre-swapped */
+static void lights(void)                        /* the levels on the LEDs, a column's bits at a time */
 {
-    uint32_t v = level * 17u;
-    return C((uint16_t)((v >> 3) << 11 | (v >> 2) << 5 | (v >> 3)));
-}
-
-/* columns [from, from + w) of a text at x: its runs, row by row */
-static void text_part(const sr_text_t *t, uint32_t x, uint32_t from, uint32_t w)
-{
-    uint32_t i = 0, y, col, n;
-    lcd_window(x, t->y, w, t->h);
-    for (y = 0; y < t->h; y++) {
-        for (col = 0; col < t->w;) {
-            uint8_t b = t->rle[i++];
-            for (n = (b & 15u) + 1u; n--; col++)
-                if (col - from < w)
-                    row_px[col - from] = grey(b >> 4);
-        }
-        lcd_row(w);
+    uint8_t lv[LT_N], lit[FM1_NCOL] = {0}, mid[FM1_NCOL] = {0}, dim[FM1_NCOL] = {0};
+    uint32_t c, r;
+    int8_t id;
+    if (!lt_now)
+        return;
+    if (!lt_now(ms - lt_t0, lv))
+        lt_now = 0;                             /* (its last picture stays) */
+    for (c = 0; c < FM1_NCOL; c++)
+        for (r = 1; r < 5u; r++)
+            if ((id = FM1_KEYMAP[r][c]) >= 0) {
+                lit[c] |= (uint8_t)((lv[id] == LT_LIT) << r);
+                mid[c] |= (uint8_t)((lv[id] == LT_MID) << r);
+                dim[c] |= (uint8_t)((lv[id] != LT_DARK) << r);
+            }
+    for (c = 0; c < FM1_NCOL; c++) {
+        fm1_led[c] = lit[c];
+        fm1_led_mid[c] = mid[c];
+        fm1_led_dim[c] = dim[c];
     }
 }
 
-static void text(const sr_text_t *t)
+static void lk_idle(void)
 {
-    text_part(t, t->x, 0, t->w);
-}
-
-/* a screen: the title and up to three texts; the rest of it black */
-static void screen(const sr_text_t *a, const sr_text_t *b, const sr_text_t *c)
-{
-    lcd_rect(0, 0, 240, 240, 0);
-    text(&TX_TITLE);
-    if (a)
-        text(a);
-    if (b)
-        text(b);
-    if (c)
-        text(c);
-}
-
-static uint32_t bar_shown;
-static void bar(uint32_t done, uint32_t total)  /* white over dark grey, drawn as it grows */
-{
-    uint32_t w = done * 208u / total;
-    if (!done || w < bar_shown) {
-        lcd_rect(16, SR_BAR_Y, 208, SR_BAR_H, 0x2104);
-        bar_shown = 0;
-    }
-    if (w > bar_shown) {
-        lcd_rect(16u + bar_shown, SR_BAR_Y, w - bar_shown, SR_BAR_H, 0xFFFF);
-        bar_shown = w;
-    }
-}
-
-/* a number in hex at x on the digits' line (the error's sector) */
-static uint32_t hex_at(uint32_t x, uint32_t v, uint32_t digits)
-{
-    while (digits--) {
-        text_part(&TX_DIGITS, x, ((v >> (4u * digits)) & 15u) * SR_DIGIT_W, SR_DIGIT_W);
-        x += SR_DIGIT_W;
-    }
-    return x;
+    fm1_wdt_feed();
+    lights();
 }
 
 /* ---- the reset's hooks (reset_core.c) ---- */
@@ -222,7 +193,7 @@ static int rs_prog(uint32_t off, const uint8_t *p, uint32_t n) { return fl_write
 static void rs_step(uint32_t done, uint32_t total)
 {
     fm1_wdt_feed();
-    bar(done, total);
+    lk_bar(done, total, done == total ? 400u : 12u);   /* a little time for the sparks, and to let them settle */
 }
 
 /* ---- the update (ota.c): the installer's M-UPGRADE session over USB-MIDI ---- */
@@ -259,13 +230,13 @@ static int ota_fread(uint32_t off, void *p, uint32_t n)
 static void ota_show(uint32_t step, int32_t code)
 {
     if (step == 1u) {
-        screen(&TX_INSTALLING, 0, 0);
-        bar_shown = 0;
+        lk_screen(&TX_INSTALLING, 0, 0);
+        lk_bar_start();
     }
     if (step < 9u)
-        bar(step, 5);
+        lk_bar(step, 5, 0);
     else if (code != 1)
-        screen(&TX_WRONG, &TX_STOPPED, 0);
+        lk_screen(&TX_WRONG, &TX_STOPPED, 0);
 }
 static void ota_commit(const uint8_t *parm)
 {
@@ -315,7 +286,7 @@ static void command(char ch)
 {
     switch (ch) {
     case 'h':
-        puts_(FELUCCA_ID " SWITCH RESET: h help, p the reset's result, r restart, u UBOOT\r\n");
+        puts_(FELUCCA_ID " CLEANSWEEP: h help, p the reset's result, r restart, u UBOOT\r\n");
         break;
     case 'p':
         puthex("range=", RS_LO); puthex("..", RS_HI);
@@ -347,32 +318,37 @@ static void app_main(void)
         irq_restore(f);
     }
     lcd_init();
-    screen(&TX_CLEARING, &TX_LEAVE_ON, 0);
+    lk_clear();
+    lk_redraw(0, 0, LK_W, LK_H);                /* the violet, before the backlight */
     fm1_input_init();
     fm1_timer5_start(isr_timer5, 4);
     fm1_guard_lock_top();
     fm1_irq_enable_all();
     fm1_lcd_backlight(1);
-    fm1_led_anim_start(0);                      /* hello: the light runs over the keys, the buttons swell */
-    while (fm1_led_anim_on())
-        fm1_wdt_feed();
+    lights_start(lt_show);                      /* hello: the light runs round, PLAY flashes */
+    lk_intro();                                 /* CLEAN and SWEEP zip in */
+    lk_screen(&TX_CLEARING, &TX_LEAVE_ON, 0);
+    lk_bar_start();
+    while (lt_now)
+        lk_idle();
     if (flash_ok)
         rs_run(&result);
     else
         result.err = -5;                        /* not the flash part an FM-1 has: touch nothing */
     if (result.err) {
-        screen(&TX_WRONG, &TX_AGAIN, 0);
-        hex_at(hex_at(88, (uint32_t)-result.err, 1) + SR_DIGIT_W, result.bad_at, 5);
+        lk_screen(&TX_WRONG, &TX_AGAIN, 0);
+        lk_hex(lk_hex(LK_W / 2 - 4 * (int32_t)CS_DIGIT_W, (uint32_t)-result.err, 1) + (int32_t)CS_DIGIT_W,
+               result.bad_at, 5);              /* the code and the sector: 7 digits, about the middle */
     } else {
-        screen(&TX_DONE, &TX_NEXT, &TX_BLUETOOTH);
-        fm1_led_anim_start(1);                  /* and again, the keys left softly lit */
+        lk_screen(&TX_DONE, &TX_NEXT, &TX_BLUETOOTH);
+        lights_start(lt_done);                  /* PLAY flashes: good to go */
     }
     guard.pending = 0;                          /* it got through: the next start is not a loop */
     guard.failed = 0;
     usb_start();
     for (;;) {
         uint32_t now = ms;
-        fm1_wdt_feed();
+        lk_idle();
         usb_retry(now);
         if (usb.uboot_req)                      /* the SysEx soft key */
             command('u');
@@ -395,8 +371,8 @@ void fm1_cstart(void)
     uint32_t *s, *d;
     fm1_time_init();
     fm1_wdt_arm(0x0D);
-    if (guard.magic != 0x53525354u || guard.pending > 1u || guard.failed > 1u) {   /* they only ever hold 0 or 1 */
-        guard.magic = 0x53525354u;
+    if (guard.magic != 0x434C5357u || guard.pending > 1u || guard.failed > 1u) {   /* they only ever hold 0 or 1 */
+        guard.magic = 0x434C5357u;
         guard.failed = 0;
         guard.pending = 0;
     }
