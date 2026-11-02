@@ -1,0 +1,19 @@
+SWITCH_RESET
+Copyright (C) 2026 Drew Robinson. MPL-2.0 (LICENSE).
+
+It is built on felucca-bsp (https://github.com/hugelton/felucca-bsp, in bsp/), Copyright (C) 2026 Leo Kuroshita
+(Hügelton Instruments) and contributors, MPL-2.0; see bsp/NOTICE for what that includes. firmware/switch_reset.c
+follows felucca-bsp's examples/hwtest. tools/lz4blk.py and the loader wrapping in tools/build.py are from fm1-base
+(https://github.com/charlesvestal/fm1-base), Copyright (C) 2026 Charles Vestal and Leo Kuroshita, MPL-2.0.
+
+Every package and app image carries V15's factory USR data (voices and settings), taken at build time from M-VAVE's
+official FM-1 V15 firmware, assets/m-vave/FM-1_015.fwsc, which M-VAVE (珠海笙科智能科技有限公司) distribute under the
+Apache License, Version 2.0 (LICENSES/Apache-2.0.txt; m-vave/fm1_open, THIRD_PARTY.md). M-VAVE supply no NOTICE
+file for it. Each package also carries three files of JieLi's AC79 SDK (uboot.boot, cfg_tool.bin, eq_cfg_hw.bin),
+Apache-2.0.
+
+The screen's words are drawn in Inter Tight by The Inter Project Authors, SIL Open Font License 1.1
+(assets/fonts/OFL.txt). Only pictures of the text are in the firmware.
+
+"M-VAVE" and "FM-1" are trademarks of their respective owners. SWITCH_RESET is not affiliated with, endorsed by or
+supported by them.

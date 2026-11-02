@@ -1,0 +1,24 @@
+# SWITCH_RESET's build tools (tools/gen_screens.py draws the screen's text with Pillow). Not a package: uv keeps
+# .venv in step with uv.lock, which pins every file by hash.
+#   uv sync --frozen
+[project]
+name = "switch-reset-tools"
+version = "0.1"
+requires-python = "==3.14.*"
+dependencies = [
+    "pillow==13.0.0",
+]
+
+[dependency-groups]
+# The command-line installer (bsp/tools/fm1_install.py): MIDI to an FM-1.
+device = [
+    "mido==1.3.3",
+    "python-rtmidi==1.5.8",
+]
+
+[tool.uv]
+package = false
+default-groups = ["device"]
+# A cooldown: nothing newer than two weeks can be locked, so a hijacked release has time to be noticed and pulled
+# before it reaches this lock.
+exclude-newer = "14 days"
