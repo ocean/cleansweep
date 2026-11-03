@@ -147,6 +147,8 @@ static void test_start(void)
     }
     CHECK(play_on == LT_FLASHES, "PLAY flashed %u times when done, not %u", play_on, LT_FLASHES);
     next_frame = ~0u;                                    /* the frames are the start; the rest are pictures */
+    if (frames_dir)
+        dump("done.raw");                                /* what tools/hw_check.py expects the real package to show */
 
     /* the light show on its own: each LED lit first in the order of the way round, and all left in the glow */
     for (i = 0; i < LT_N; i++)

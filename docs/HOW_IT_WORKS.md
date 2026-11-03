@@ -46,6 +46,7 @@ FM-1 on them first.
 | `tests/reset_test.c` | The reset on a pretend flash: a power cut at every erase and write, then a restart, and more. |
 | `tests/look_test.c` | The look and the lights on a pretend screen and clock. |
 | `tools/preview.py` | An animated picture of a start, from `look_test.c`: the screen and a sketch of the panel's lights. |
+| `tools/hw_check.py` | The real package on emulated FM-1 hardware: a whole reset, ending on the done screen. |
 | `tools/usr_data.py` | Takes V15's factory USR data out of M-VAVE's package at build time and checks it. |
 | `tools/gen_screens.py` | Draws the screen's words in Cooper Hewitt italic ([assets/fonts](../assets/fonts/README.md)). |
 | `tools/build.py` | Builds the update loader, the app and the package. |
@@ -61,7 +62,15 @@ V15 and everything else. 257 spells CLS on a phone keypad (ESTAMPIE's 378 spells
     tests/run_tests.sh
     uv run tools/build.py          # build/cleansweep.fwsc
     uv run tools/preview.py        # build/preview/start.gif: what a start looks like
+    uv run tools/hw_check.py       # the package on emulated FM-1 hardware, about a minute
 
 The JieLi toolchain and AC79 SDK are the ones ESTAMPIE's `tools/setup_toolchain.sh` fetches and checks
 (`tools/toolchain.lock` has the same pins); `JIELI_TOOLCHAIN` and `AC79_SDK` point elsewhere. On macOS the tools run in
 the pinned distroless container, with no network, so Docker must be running.
+
+`tools/hw_check.py` boots the built package on [shcherbakov7's emulator of the FM-1's
+hardware](https://github.com/shcherbakov7/m-wave-fm1-browser-emulator) (GPL-3.0, run, not included), the copy
+ESTAMPIE pins and builds (`tools/setup_toolchain.sh --only hw` there), or the one `FM1_HW_EMU` points at. It checks
+the reset runs to the end without stopping or starting the audio, USB comes up after it, and the last screen is the
+done screen exactly as `look_test.c` draws it. It can't see the LEDs, doesn't run at the FM-1's speed and starts from
+its own flash, so the device still has the last word.

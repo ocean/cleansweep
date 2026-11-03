@@ -3,6 +3,9 @@
 Drew runs every step that changes a device. Take a flash backup first (FM1Kit `fm1probe flash-backup`), and keep
 download mode within reach: it's the way back from anything.
 
+Before installing, `uv run tools/hw_check.py` should pass: the same package, run to the done screen on emulated
+hardware.
+
 Install with the usual installer, e.g. `uv run bsp/tools/fm1_install.py build/cleansweep.fwsc`, FM-SWITCH or the
 FM1Kit app.
 
