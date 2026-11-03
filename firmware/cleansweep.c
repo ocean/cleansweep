@@ -19,7 +19,7 @@
 #define FELUCCA_CDC 1
 #define FELUCCA_OTA 1
 #ifndef FELUCCA_ID
-#define FELUCCA_ID "FM-1_379000"      /* the identity the installer sees, == the package's (tools/build.py) */
+#define FELUCCA_ID "FM-1_257000"      /* the identity the installer sees, == the package's (tools/build.py) */
 #endif
 #define FELUCCA_USB_MANUFACTURER "M-VAVE"
 #define FELUCCA_USB_PRODUCT "FM-1 CLEANSWEEP"

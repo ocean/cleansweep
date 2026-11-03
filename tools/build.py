@@ -6,7 +6,7 @@ build/cleansweep.fwsc (the package any FM-1 installer takes).
 
   uv run tools/build.py [--release N]
 
---release N gives the package the identity FM-1_379NNN (dev builds FM-1_379000).
+--release N gives the package the identity FM-1_257NNN (dev builds FM-1_257000).
 
 The JieLi toolchain is Linux x86-64 only. JIELI_TOOLCHAIN points at it (default: ../estampie/.toolchain/jieli/
 toolchain, which ESTAMPIE's tools/setup_toolchain.sh fetches and checks against the same pin as tools/toolchain.lock
@@ -169,9 +169,9 @@ def build_app(product):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--release", type=int, metavar="N", help="identity FM-1_379NNN (default 000: a dev build)")
+    ap.add_argument("--release", type=int, metavar="N", help="identity FM-1_257NNN (default 000: a dev build)")
     a = ap.parse_args()
-    product = f"FM-1_379{(a.release or 0):03d}"
+    product = f"FM-1_257{(a.release or 0):03d}"
     sdk = Path(os.environ.get("AC79_SDK") or ROOT.parent / "estampie" / ".toolchain" / "ac79-sdk")
     GEN.mkdir(parents=True, exist_ok=True)
     py = [sys.executable, "-I"]

@@ -55,8 +55,8 @@ FM-1 on them first.
 | `tools/build.py` | Builds the update loader, the app and the package. |
 | `bsp/` | [felucca-bsp](https://github.com/hugelton/felucca-bsp), pinned as a submodule. Its update check takes V15, V16, m-bootloader and Felucca-platform firmwares over any bootloader. |
 
-The identity is **FM-1_379000** for development builds, and FM-1_379NNN for releases, so installers can tell it from
-V15 and everything else.
+The identity is **FM-1_257000** for development builds, and FM-1_257NNN for releases, so installers can tell it from
+V15 and everything else. 257 spells CLS on a phone keypad (ESTAMPIE's 378 spells EST).
 
 ## Build
 
