@@ -1,6 +1,6 @@
 # AGENTS.md: working on CLEANSWEEP
 
-CLEANSWEEP is a tiny FM-1 firmware that clears saved data left by earlier firmwares (README.md says what and why).
+CLEANSWEEP is a tiny FM-1 firmware that clears saved data left by earlier firmwares (README.md says what it is for; docs/HOW_IT_WORKS.md the detail and the build).
 It's maintained by Drew Robinson (GitHub `ocean`), built by the ESTAMPIE agent session, and tracked in kata
 (project `fm-1`, issue `magt`, labels `estampie`, `fm1kit`, `fm-switch`).
 
