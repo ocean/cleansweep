@@ -5,8 +5,8 @@ the way back from anything, with a `flash-restore` of the C0 backup, or an erasi
 (FM1Kit's stage R11).
 
 Before installing, `uv run tools/hw_check.py` should pass: the same package, run to the done screen on emulated
-hardware. The package to test is HEAD 1cac418's build: `build/cleansweep.fwsc`, `FM-1_257000`, SHA-256
-`b0d65cb12f35a93adb91fd7fa7fee2382aee670a4b1e38001569fbb34fb596dc`. Check it with FM1Kit's `swift run fm1probe
+hardware. The package to test is this tree's build: `build/cleansweep.fwsc`, `FM-1_257000`, SHA-256
+`eb89ab0a4482ce01dff5314163129339723ede0aad59e8632eaa774c99947bb9`. Check it with FM1Kit's `swift run fm1probe
 inspect ../cleansweep/build/cleansweep.fwsc`.
 
 Run the commands from FM1Kit's folder (`../FM1Kit` from here). The packages:
@@ -42,9 +42,9 @@ Start on V15 with M-VAVE's bootloader.
 | C1 | `swift run fm1probe install .artifacts/tmp/v16/FM-1-v16.fwsc --log .artifacts/tmp/c1.csv` | V15 takes V16. Play a few notes, so V16 has run. |
 | C2 | `swift run fm1probe install ../FM-SWITCH/App/Resources/Firmware/FM-1_015.fwsc --log .artifacts/tmp/c2.csv`, then `swift run fm1probe restore-voices ../FM-SWITCH/App/Resources/Firmware/FM-1_015.fwsc` | V15 is back with `PIANO 1`, but plays one note at a time (as in FM1Kit's stage R). |
 | C3 | As C0 | The "before" backup: the mono V15. |
-| C4 | `swift run fm1probe install ../cleansweep/build/cleansweep.fwsc --log .artifacts/tmp/c4.csv` | V15 takes CLEANSWEEP. Watch the FM-1 from the restart: CLEAN and SWEEP zip in on violet; a light runs OCT+, OCT-, the keys left to right, the top row of buttons right to left, the bottom row left to right; PLAY flashes green three times. REC (red) only glows as the light passes, and never lights brightly. Then "Clearing old settings…" with a fizzing bar, "Done: everything is fine." and PLAY's flashes again. **No sound at any point**, not even a pop at power-on. Note whether the animation is smooth or jerky, and write down the light order if it's wrong: only PLAY and REC have been placed on hardware. |
+| C4 | `swift run fm1probe install ../cleansweep/build/cleansweep.fwsc --log .artifacts/tmp/c4.csv` | V15 takes CLEANSWEEP. Watch the FM-1 from the restart: about 0.6 s of plain violet with every LED dark, then CLEAN and SWEEP zip in; a light runs OCT+, OCT-, the keys left to right, the top row of buttons right to left, the bottom row left to right; PLAY flashes green three times. REC (red) only glows as the light passes, and never lights brightly. Then "Clearing old settings…" with a fizzing bar, "Done: everything is fine." and PLAY's flashes again. **No sound at any point**, not even a pop at power-on. Note whether the animation is smooth or jerky, and write down the light order if it's wrong: only PLAY and REC have been placed on hardware. |
 | C5 | Once the done screen is up: `swift run fm1probe identify` | `FM-1_257000`. Optional: the console's `p` gives `err=0` and `erased=` some tens of sectors. |
-| C6 | Switch off and on | The same screens. The name and the light show take about 2 s, then the bar sweeps through in about 1.7 s with nothing to erase: about 4 s from power-on to "Done". Optional: `p` gives `erased=0 pages_written=0`. |
+| C6 | Switch off and on | The same screens. The pause, the name and the light show take about 3 s, then the bar sweeps through in about 1.7 s with nothing to erase: about 5 s from power-on to "Done". Optional: `p` gives `erased=0 pages_written=0`. |
 | C7 | As C0, then `python3 -I .artifacts/scripts/check_cleansweep.py <C7 backup> .artifacts/tmp/r3-diag/v15-usr.bin <C3 backup>` | 105 of 105 sectors as expected; the boot area and 0xFC000–0xFFFFF unchanged. |
 | C8 | `swift run fm1probe install ../FM-SWITCH/App/Resources/Firmware/FM-1_015.fwsc --log .artifacts/tmp/c8.csv` | CLEANSWEEP takes V15. **Chords play**, with `PIANO 1` and every bank, without restoring the voices. |
 | C9 | On a phone, forget the FM-1, then pair it again | Pairing works, under a new Bluetooth address. |
@@ -71,3 +71,30 @@ Later, if wanted: CLEANSWEEP over Felucca 1.6.1 or ESTAMPIE, and LOOM over CLEAN
 
 For each step: the commands' output, what the screen and lights did, anything from the speaker, and the check's
 result for C7 and C15.
+
+## Results: 3 Nov 2026 (Drew's FM-1, M-VAVE's bootloader)
+
+Every step passed but C14, which waits for FM-SWITCH. Drew ran them; the FM1Kit session kept the log (its
+`.artifacts/tmp/c*.csv` and `c-backups/`). The builds: C4–C9 `b0d65cb1`, C10–C13 `64f52cf9` (the start waits for
+the panel, a slower light), C15 `d28db48c` (PLAY's green, warmer violet, a heavier Bluetooth note, more sparkle).
+
+| Step | Result |
+|---|---|
+| C0–C3 | Set up as planned: V15 → V16 → V15 left V15 playing one note at a time. |
+| C4 | Ran to "Done" with no sound. Feedback on that build: both animations started before the panel was visibly ours (only the end of SWEEP moved, the keys already part lit), and PLAY flashed red. PLAY's own LED is red; its green one is outside the key matrix (column 8, PA9). Fixed in `64f52cf9` and `d28db48c`. |
+| C5 | `fm1probe identify`: FM-1_257000. macOS listed it as "FM-1 ESTAMPIE": its cached MIDI name for the shared USB id 1209:0001, while the device's own product string reads "FM-1 CLEANSWEEP" (kata 39ck, xbkc). |
+| C6 | Off and on: the same screens, no sound, about 4 s from power-on to "Done" (on `b0d65cb1`, before the start wait). |
+| C7 | 105 of 105 sectors as expected; the boot area and 0xFC000–0xFFFFF unchanged; 0xFBD80 back to V15's factory bytes. |
+| C8 | CLEANSWEEP → V15 in 20.0 s. Chords, `PIANO 1`, no voice restore. |
+| C9 | The phone paired. With no earlier pairing, the new address couldn't be checked. |
+| C10 | V16 → CLEANSWEEP in 40.4 s (ota-FM-1_900 with its read-back check). "Done", no sound. `p`: `err=0 erased=54 pages_written=159`. The light visibly starts at OCT+ and goes round. |
+| C11 | CLEANSWEEP → V16 in 20.1 s. V16 starts fresh on its own voices (`PIANO 3`) and plays chords. (Over a V15 that has run it takes V15's banks: it seems to look for V15's own records, which CLEANSWEEP clears.) |
+| C12 | V16 → CLEANSWEEP in 39.9 s; CLEANSWEEP's own loader then took MIDIMON 0.4 in 32.3 s, and it started normally. |
+| C13 | MIDIMON → CLEANSWEEP in 35.1 s; CLEANSWEEP → V15 in 20.9 s. Chords, `PIANO 1`, no voice restore. |
+| C14 | Waiting: FM-SWITCH doesn't offer CLEANSWEEP yet. |
+| C15 | V15 → V16 → V15 left V15's sounds "all very broken" (V16 damaging V15's voice banks, as in FM1Kit's R8). V15 → CLEANSWEEP in 58.3 s, with the power cut several times during the bar, twice in a row among them: each start ran on to "Done", and none came up in download mode. The byte check: 105 of 105, the boot area and 0xFC000 on unchanged (against C3 and C0). |
+| C15d | CLEANSWEEP → V15 in 19.4 s: polyphonic, its sounds right, no voice restore. CLEANSWEEP also undoes V16's damage to V15's voices. |
+
+Drew on `d28db48c`: the timings and the font look good; PLAY "flashes green really nicely"; he'd rather have
+slightly bigger sparks than more of them (the next build: the old count, a step bigger). On `eb89ab0a`, which has just that
+change, his verdict was "perfect!": the look he's settled on.

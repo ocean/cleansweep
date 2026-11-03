@@ -21,7 +21,8 @@ Every time it starts:
 3. The screen says it's done, that the next firmware can go on, and that Bluetooth devices will need pairing again.
    PLAY flashes again.
 4. USB comes up and the installer (FM-SWITCH, FM1Kit, a web installer, `fm1_install.py`) can install the next
-   firmware: V15 (its voices are already back), V16, or anything else.
+   firmware: V15 (its voices are already back), V16 (which starts
+   fresh on its own voices, PIANO 3 first: seen on hardware, 3 Nov), or anything else.
 
 What it never touches: the boot area and its own image (below 0x93000), Felucca's store at 0xFC000–0xFEFFF (where
 Melodee and LOOM keep their Bluetooth details) and 0xFF000. The flash driver itself refuses anything outside the range.
