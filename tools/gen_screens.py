@@ -36,7 +36,7 @@ TEXTS = {
     "leave_on": (16, "Medium", 130, ["Please leave the FM-1 on. It only takes a few seconds."]),
     "done":     (19, "Semibold", 102, ["Done: everything is fine."]),
     "next":     (16, "Medium", 130, ["You can install your next firmware now."]),
-    "bluetooth": (14, "Book", 180, ["Bluetooth devices will need pairing again: forget the FM-1 on them first, then pair."]),
+    "bluetooth": (14, "Medium", 180, ["Bluetooth devices will need pairing again: forget the FM-1 on them first, then pair."]),
     "wrong":    (19, "Semibold", 102, ["Something went wrong."]),
     "again":    (16, "Medium", 130, ["Turn the FM-1 off and on again to try again."]),
     "installing": (19, "Semibold", 102, ["Installing your next firmware…"]),

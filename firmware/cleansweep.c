@@ -135,9 +135,15 @@ static void lk_row(uint16_t *px, uint32_t w)
 
 static uint32_t lk_ms(void) { return ms; }
 
+/* The panel takes a moment to show the violet after M-VAVE's loader screen: with no wait the show was half over
+ * before it was visibly ours, and 500 ms left the violet still coming on (Drew, on hardware). */
+#define START_WAIT_MS 580u
+
 /* ---- the lights (lights.c): the show at power-on, PLAY's flashes when it's done ---- */
 static uint32_t lt_t0;
 static int (*lt_now)(uint32_t, uint8_t *);      /* the show running, or 0 */
+#define LT_GREEN_COL 8u                         /* PLAY's green LED: column 8, PA9 (bit 1), no key there */
+#define LT_GREEN_BIT 1u
 
 static void lights_start(int (*show)(uint32_t, uint8_t *))
 {
@@ -147,7 +153,7 @@ static void lights_start(int (*show)(uint32_t, uint8_t *))
 
 static void lights(void)                        /* the levels on the LEDs, a column's bits at a time */
 {
-    uint8_t lv[LT_N], lit[FM1_NCOL] = {0}, mid[FM1_NCOL] = {0}, dim[FM1_NCOL] = {0};
+    uint8_t lv[LT_NLV], lit[FM1_NCOL] = {0}, mid[FM1_NCOL] = {0}, dim[FM1_NCOL] = {0};
     uint32_t c, r;
     int8_t id;
     if (!lt_now)
@@ -161,6 +167,7 @@ static void lights(void)                        /* the levels on the LEDs, a col
                 mid[c] |= (uint8_t)((lv[id] == LT_MID) << r);
                 dim[c] |= (uint8_t)((lv[id] != LT_DARK) << r);
             }
+    lit[LT_GREEN_COL] |= (uint8_t)((lv[LT_GREEN] == LT_LIT) << LT_GREEN_BIT);   /* only ever lit or dark */
     for (c = 0; c < FM1_NCOL; c++) {
         fm1_led[c] = lit[c];
         fm1_led_mid[c] = mid[c];
@@ -325,6 +332,11 @@ static void app_main(void)
     fm1_guard_lock_top();
     fm1_irq_enable_all();
     fm1_lcd_backlight(1);
+    {                                           /* the panel and the LEDs visibly up before anything moves */
+        uint32_t t0 = ms;
+        while (ms - t0 < START_WAIT_MS)
+            lk_idle();
+    }
     lights_start(lt_show);                      /* hello: the light runs round, PLAY flashes */
     lk_intro();                                 /* CLEAN and SWEEP zip in */
     lk_screen(&TX_CLEARING, &TX_LEAVE_ON, 0);

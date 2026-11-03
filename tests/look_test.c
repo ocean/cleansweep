@@ -19,7 +19,7 @@
 
 static uint16_t fb[LK_H][LK_W], fresh[LK_H][LK_W];
 static uint32_t win_x, win_y, win_w, win_h, win_row, clock_ms, next_frame, frame_no, windows;
-static uint8_t leds[LT_N];
+static uint8_t leds[LT_NLV];
 static uint32_t lt_t0;
 static int (*lt_now)(uint32_t, uint8_t *);
 static const char *frames_dir;
@@ -142,10 +142,11 @@ static void test_start(void)
     lights_start(lt_done);
     for (i = 0; i < 1500u; i++) {
         lk_idle();
-        play_on += leds[LT_PLAY] == LT_LIT && !was;
-        was = leds[LT_PLAY] == LT_LIT;
+        play_on += leds[LT_GREEN] == LT_LIT && !was;
+        was = leds[LT_GREEN] == LT_LIT;
+        CHECK(!was || leds[LT_PLAY] == LT_DARK, "PLAY's red LED on with its green at %u ms", i);
     }
-    CHECK(play_on == LT_FLASHES, "PLAY flashed %u times when done, not %u", play_on, LT_FLASHES);
+    CHECK(play_on == LT_FLASHES, "PLAY flashed green %u times when done, not %u", play_on, LT_FLASHES);
     next_frame = ~0u;                                    /* the frames are the start; the rest are pictures */
     if (frames_dir)
         dump("done.raw");                                /* what tools/hw_check.py expects the real package to show */
@@ -154,7 +155,7 @@ static void test_start(void)
     for (i = 0; i < LT_N; i++)
         first[i] = ~0u;
     for (s = 0; s < LT_SHOW_MS + 100u; s++) {
-        uint8_t lv[LT_N];
+        uint8_t lv[LT_NLV];
         int on = lt_show(s, lv);
         CHECK(on == (s < LT_SHOW_MS), "the show says it's running at %u ms: %d", s, on);
         for (i = 0; i < LT_N; i++)

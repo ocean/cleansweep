@@ -18,14 +18,14 @@ from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
 W = H = 240
-NLED = 41
+NLED = 42                                                  # the matrix's 41, then PLAY's green
 GLOW, MID, LIT = 1, 2, 3
 SCALE = 2
 TOP = ["FX", "SEL", "ENV", "LFO", "EDIT", "GLO"]           # their board ids (ESTAMPIE's panel.c)
 TOP_ID = [2, 3, 4, 5, 6, 7]
 BOTTOM = ["HOME", "SAVE", "ARP", "SEQ", "PLAY", "REC"]
 BOTTOM_ID = [8, 9, 10, 11, 12, 13]
-COLOUR = {12: (0x8F, 0xE3, 0x6B), 13: (0xFF, 0x5A, 0x4F)}    # PLAY green, REC red, the rest white
+COLOUR = {12: (0xFF, 0x5A, 0x4F), 13: (0xFF, 0x5A, 0x4F), 41: (0x8F, 0xE3, 0x6B)}   # PLAY red and green, REC red
 BLACK_AFTER = {0, 1, 2, 4, 5, 7, 8, 9, 11, 12}             # white keys from F (of a 7) followed by a black key
 
 
@@ -48,7 +48,10 @@ def panel(levels):
     for row, (names, ids) in enumerate(((TOP, TOP_ID), (BOTTOM, BOTTOM_ID))):
         for i, (name, n) in enumerate(zip(names, ids)):
             x, y = 120 + i * 58, 8 + row * 30
-            led(d, (x, y, x + 50, y + 22), levels[n], COLOUR.get(n, (255, 255, 255)))
+            if n == 12 and levels[41]:                     # PLAY's green LED, beside its red one
+                led(d, (x, y, x + 50, y + 22), levels[41], COLOUR[41])
+            else:
+                led(d, (x, y, x + 50, y + 22), levels[n], COLOUR.get(n, (255, 255, 255)))
             d.text((x + 25, y + 11), name, fill=(120, 120, 130), anchor="mm")
     for i, (name, n) in enumerate((("OCT-", 0), ("OCT+", 1))):
         x = 8 + i * 52

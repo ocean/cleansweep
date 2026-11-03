@@ -29,12 +29,14 @@ static void lk_idle(void);
 
 typedef struct { int32_t r, g, b; } lk_rgb_t;
 
-static const lk_rgb_t LK_TOP = {0x2B, 0x12, 0x60};        /* FM-SWITCH's launch violet */
-static const lk_rgb_t LK_BOTTOM = {0x16, 0x09, 0x34};
-static const lk_rgb_t LK_GLOW = {0x6D, 0x28, 0xD9};       /* its glow, behind the name */
+/* FM-SWITCH's launch violet (0x2B1260 to 0x0C0618, its glow 0x6D28D9), with more red: on the FM-1's panel its own
+ * values looked blue and greyish (Drew's photos, 3 Nov). */
+static const lk_rgb_t LK_TOP = {0x4C, 0x14, 0x78};
+static const lk_rgb_t LK_BOTTOM = {0x26, 0x08, 0x40};
+static const lk_rgb_t LK_GLOW = {0x8C, 0x2C, 0xE0};       /* behind the name */
 static const lk_rgb_t LK_WHITE = {0xFF, 0xFF, 0xFF};
 static const lk_rgb_t LK_LAVENDER = {0xB7, 0x9C, 0xFF};   /* its violet phosphor */
-static const lk_rgb_t LK_TRACK = {0x4A, 0x2C, 0x8C};      /* the bar still to go */
+static const lk_rgb_t LK_TRACK = {0x60, 0x2E, 0x98};      /* the bar still to go */
 #define LK_GLOW_X 120
 #define LK_GLOW_Y 46
 #define LK_GLOW_R2 (150 * 150)
@@ -44,6 +46,7 @@ static const lk_rgb_t LK_TRACK = {0x4A, 0x2C, 0x8C};      /* the bar still to go
 #define LK_BAR_W 208
 #define LK_FIZZ CS_FIZZ                                   /* rows above and below the bar the sparks may reach */
 #define LK_SPARKS 40
+#define LK_SPARK_R 3                                       /* a new spark's arms, in pixels */
 #define LK_TICK 16u                                       /* ms: the sparks move this often, however fast frames are */
 
 static lk_rgb_t lk_line[LK_W];
@@ -161,8 +164,11 @@ static void lk_spark_row(int32_t y, int32_t lo, int32_t hi)
         int32_t sx = lk_spark[i].x >> 3, sy = lk_spark[i].y >> 3, a, k;
         uint32_t age = lk_spark[i].age, life = lk_spark[i].life;
         lk_rgb_t c;
-        int32_t size = age * 3u < life ? 2 : age * 3u < 2u * life ? 1 : 0;   /* a star, shrinking to a dot */
-        if (!life || y < sy - size || y > sy + size)
+        int32_t size;
+        if (!life)
+            continue;
+        size = LK_SPARK_R - (int32_t)(age * 3u / life);   /* a star, shrinking a step each third of its life */
+        if (y < sy - size || y > sy + size)
             continue;
         a = 256 - (int32_t)(age * 256u / life);           /* fading out */
         if (age & 2u)
@@ -299,8 +305,9 @@ static void lk_fizz(void)
             lk_spark[i].x += lk_spark[i].vx;
             lk_spark[i].y += lk_spark[i].vy;
             lk_spark[i].vy = lk_spark[i].vy * 7 / 8;      /* bubbles slowing as they rise */
-            if ((lk_spark[i].y >> 3) < CS_BAR_Y - LK_FIZZ + 2 || (lk_spark[i].y >> 3) > CS_BAR_Y + CS_BAR_H + LK_FIZZ - 3
-                || (lk_spark[i].x >> 3) < 2 || (lk_spark[i].x >> 3) > LK_W - 3)
+            if ((lk_spark[i].y >> 3) < CS_BAR_Y - LK_FIZZ + LK_SPARK_R
+                || (lk_spark[i].y >> 3) > CS_BAR_Y + CS_BAR_H + LK_FIZZ - 1 - LK_SPARK_R
+                || (lk_spark[i].x >> 3) < LK_SPARK_R || (lk_spark[i].x >> 3) > LK_W - 1 - LK_SPARK_R)
                 lk_spark[i].life = 0;                     /* (a star's arms stay in the fizz's rows) */
         } else if (born < 3u && lk_bar_px < LK_BAR_W && lk_rand(4)) {
             born++;
@@ -323,8 +330,8 @@ static void lk_bar_frame(uint32_t was_px)
     for (i = 0; i < LK_SPARKS; i++)
         if (lk_spark[i].life) {
             int32_t x = lk_spark[i].x >> 3;
-            slo = x - 2 < slo ? x - 2 : slo;
-            shi = x + 3 > shi ? x + 3 : shi;
+            slo = x - LK_SPARK_R < slo ? x - LK_SPARK_R : slo;
+            shi = x + LK_SPARK_R + 1 > shi ? x + LK_SPARK_R + 1 : shi;
         }
     if (lk_drawn_lo < lk_drawn_hi) {
         lo = lk_drawn_lo < lo ? lk_drawn_lo : lo;
