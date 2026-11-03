@@ -10,7 +10,8 @@ It erases most of what firmwares have saved, such as sounds, patterns and V15's 
 undo. V15's factory voices are put back. When it says it's done, install the firmware you want next. CLEANSWEEP does nothing
 else: it makes no sound.
 
-**Status: tested on a computer only, not yet on an FM-1.**
+**Status: tested on an FM-1:** from V15, V16 and MIDIMON, through power cuts, and back to V15 and V16 (results in
+[HARDWARE_TESTING.md](HARDWARE_TESTING.md)). Not yet released.
 
 How it works and how to build it: [docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md).
 
