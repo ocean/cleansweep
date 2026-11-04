@@ -368,8 +368,10 @@ static void app_main(void)
     {                                           /* the serial number: the flash's first eight unique-ID bytes */
         static const char hex[] = "0123456789ABCDEF";
         uint8_t uid[16];
-        uint32_t i;
-        if (!FL_FAR(fl_uid_ram)(uid))
+        uint32_t i, f = irq_save();             /* the timer's interrupt runs from the flash, off while it's read */
+        int rc = FL_FAR(fl_uid_ram)(uid);
+        irq_restore(f);
+        if (!rc)
             for (i = 0; i < 8u; i++) {
                 cs_serial[2 * i] = hex[uid[i] >> 4];
                 cs_serial[2 * i + 1] = hex[uid[i] & 15u];
