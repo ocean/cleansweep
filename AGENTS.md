@@ -17,6 +17,7 @@ It's maintained by Drew Robinson (GitHub `ocean`), built by the ESTAMPIE agent s
   repository, publishing and releasing are Drew's call.
 - **Python** through uv only (`uv sync --frozen`); anything new is pinned by hash and scanned with osv-scanner.
 - **Scratch work** goes in `.artifacts/` (git-ignored).
-- **bsp/** is felucca-bsp, a submodule pinned by commit: change it upstream, never here.
+- **bsp/** is felucca-bsp, a submodule pinned by commit: never edit it here. CLEANSWEEP's own changes to it are
+  `patches/*.patch`, which `tools/build.py` applies to copies in `build/bsp/`. Offering them upstream is Drew's call.
 - **V15's data** comes from `assets/m-vave/FM-1_015.fwsc` at build time (`tools/usr_data.py`, pinned by SHA-256);
   never hand-copy bytes.

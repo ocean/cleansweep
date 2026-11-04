@@ -21,8 +21,16 @@
 #ifndef FELUCCA_ID
 #define FELUCCA_ID "FM-1_257000"      /* the identity the installer sees, == the package's (tools/build.py) */
 #endif
-#define FELUCCA_USB_MANUFACTURER "M-VAVE"
-#define FELUCCA_USB_PRODUCT "FM-1 CLEANSWEEP"
+/* V15's USB identity (kata xbkc, a test build): its ids and bcdDevice, the product "FM-1", no manufacturer, and the
+ * flash's unique ID as the serial number, in hex, as V15 and download mode give it. */
+#define FELUCCA_USB_VID 0x4C4A
+#define FELUCCA_USB_PID 0xC755
+#define FELUCCA_USB_BCD 0x0100
+#define FELUCCA_USB_NO_MANUFACTURER 1
+#define FELUCCA_USB_PRODUCT "FM-1"
+#define FELUCCA_USB_SERIAL cs_serial
+static char cs_serial[17];
+#define FL_UID
 #define RING_PUBLISH() __asm__ volatile("" ::: "memory")
 #include "fm1_time.h"
 #include "fm1_sys.h"
@@ -357,6 +365,16 @@ static void app_main(void)
     }
     guard.pending = 0;                          /* it got through: the next start is not a loop */
     guard.failed = 0;
+    {                                           /* the serial number: the flash's first eight unique-ID bytes */
+        static const char hex[] = "0123456789ABCDEF";
+        uint8_t uid[16];
+        uint32_t i;
+        if (!FL_FAR(fl_uid_ram)(uid))
+            for (i = 0; i < 8u; i++) {
+                cs_serial[2 * i] = hex[uid[i] >> 4];
+                cs_serial[2 * i + 1] = hex[uid[i] & 15u];
+            }
+    }
     usb_start();
     for (;;) {
         uint32_t now = ms;

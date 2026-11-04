@@ -37,7 +37,8 @@ APP_SLOT = 0x8DFBC                  # the app area, 0x4000..0x93000, less the pa
 LOADER_LOAD = 0x01C0A800
 LOADER_NAME = b"usb_hid_ota.bin"    # the file name the SPL looks for
 CFLAGS = ["-Os", "-ffunction-sections", "-fno-builtin", "-Wall", "-Werror", "-Wno-unused-function"]
-INC = ["-Ibsp/chip", "-Ibsp/boards/fm1", "-Ibuild/gen"]
+INC = ["-Ibuild/bsp/chip", "-Ibsp/chip", "-Ibsp/boards/fm1", "-Ibuild/gen"]   # the patched copies first
+PATCHES = ROOT / "patches"          # CLEANSWEEP's changes to felucca-bsp, applied to copies (patch_bsp)
 NAME = "cleansweep"
 
 
@@ -134,6 +135,17 @@ def build_loader():
     return ota
 
 
+def patch_bsp():
+    """the app's felucca-bsp files with patches/*.patch applied, as copies in build/bsp/ (the submodule stays as
+    published; the loader is built from it unpatched)"""
+    out = OUT / "bsp"
+    for patch in sorted(PATCHES.glob("*.patch")):
+        for f in re.findall(r"^\+\+\+ b/(\S+)$", patch.read_text(), re.M):
+            (out / f).parent.mkdir(parents=True, exist_ok=True)
+            (out / f).write_bytes((BSP / f).read_bytes())
+        subprocess.run(["git", "apply", f"--directory={out.relative_to(ROOT)}", patch], cwd=ROOT, check=True)
+
+
 def build_app(product):
     o = OUT / "app"
     o.mkdir(parents=True, exist_ok=True)
@@ -178,6 +190,7 @@ def main():
     subprocess.run([*py, ROOT / "tools" / "usr_data.py", "--header", GEN / "usr_data.h"], check=True)
     subprocess.run([sys.executable, ROOT / "tools" / "gen_screens.py", "--out", GEN], check=True)
     ota = build_loader()
+    patch_bsp()
     img = build_app(product)
     (OUT / f"{NAME}.bin").write_bytes(img)
     pkg = OUT / f"{NAME}.fwsc"

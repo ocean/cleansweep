@@ -82,7 +82,7 @@ the panel, a slower light), C15 `d28db48c` (PLAY's green, warmer violet, a heavi
 |---|---|
 | C0–C3 | Set up as planned: V15 → V16 → V15 left V15 playing one note at a time. |
 | C4 | Ran to "Done" with no sound. Feedback on that build: both animations started before the panel was visibly ours (only the end of SWEEP moved, the keys already part lit), and PLAY flashed red. PLAY's own LED is red; its green one is outside the key matrix (column 8, PA9). Fixed in `64f52cf9` and `d28db48c`. |
-| C5 | `fm1probe identify`: FM-1_257000. macOS listed it as "FM-1 ESTAMPIE": its cached MIDI name for the shared USB id 1209:0001, while the device's own product string reads "FM-1 CLEANSWEEP" (kata 39ck, xbkc). |
+| C5 | `fm1probe identify`: FM-1_257000. macOS listed it as "FM-1 ESTAMPIE": its cached MIDI name for the shared USB id 1209:0001, while the device's own product string read "FM-1 CLEANSWEEP" (kata 39ck). Since then it uses V15's USB identity (below). |
 | C6 | Off and on: the same screens, no sound, about 4 s from power-on to "Done" (on `b0d65cb1`, before the start wait). |
 | C7 | 105 of 105 sectors as expected; the boot area and 0xFC000–0xFFFFF unchanged; 0xFBD80 back to V15's factory bytes. |
 | C8 | CLEANSWEEP → V15 in 20.0 s. Chords, `PIANO 1`, no voice restore. |
@@ -98,3 +98,16 @@ the panel, a slower light), C15 `d28db48c` (PLAY's green, warmer violet, a heavi
 Drew on `d28db48c`: the timings and the font look good; PLAY "flashes green really nicely"; he'd rather have
 slightly bigger sparks than more of them (the next build: the old count, a step bigger). On `eb89ab0a`, which has just that
 change, his verdict was "perfect!": the look he's settled on.
+
+## Results: 4 Nov 2026, V15's USB identity (kata xbkc)
+
+`57891224` (`eb89ab0a` with only the USB identity changed: 4C4A:C755, bcdDevice 0x0100, "FM-1", no manufacturer,
+the unit-ID serial; the console kept), on Drew's FM-1, a Mac that had seen V15. The FM1Kit session kept the log.
+
+| Check | Result |
+|---|---|
+| MIDI Studio | Reused V15's "FM-1" entry. No new entry; "FM-1 ESTAMPIE" went grey. |
+| `fm1probe devices` / `identify` | FM-1_257000, serial 4150353835313708 (download mode's unit ID). |
+| Console | Came up at `/dev/cu.usbmodem103`. |
+| ioreg | 4C4A:C755, bcdDevice 0x0100, class EF/02/01; audio control, MIDI, CDC. |
+| macOS prompt | "Allow accessory to connect? FM-1" once, when it first came up after the sweep. Not again on replugging, nor on installing V15 over it; MIDI Studio still has one "FM-1". |

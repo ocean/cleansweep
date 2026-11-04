@@ -52,9 +52,15 @@ FM-1 on them first.
 | `tools/gen_screens.py` | Draws the screen's words in Cooper Hewitt italic ([assets/fonts](../assets/fonts/README.md)). |
 | `tools/build.py` | Builds the update loader, the app and the package. |
 | `bsp/` | [felucca-bsp](https://github.com/hugelton/felucca-bsp), pinned as a submodule. Its update check takes V15, V16, m-bootloader and Felucca-platform firmwares over any bootloader. |
+| `patches/` | CLEANSWEEP's changes to felucca-bsp, applied by `tools/build.py` to copies in `build/bsp/`, so the submodule stays as published. One so far: settings in `chip/usb.c` for the USB identity below. |
 
 The identity is **FM-1_257000** for development builds, and FM-1_257NNN for releases, so installers can tell it from
 V15 and everything else. 257 spells CLS on a phone keypad (ESTAMPIE's 378 spells EST).
+
+On USB it shows up as V15 does: 4C4A:C755, bcdDevice 0x0100, the product "FM-1" with no manufacturer, and the
+flash's unique ID as the serial number (the same 16 hex digits V15 and download mode give). So a computer keeps the
+one "FM-1" it already knows, rather than adding another device for each firmware (kata xbkc). The console makes
+its interfaces differ from V15's, and macOS asks once per Mac whether to allow the accessory.
 
 ## Build
 

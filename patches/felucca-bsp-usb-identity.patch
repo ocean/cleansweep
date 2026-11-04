@@ -1,0 +1,71 @@
+SPDX-License-Identifier: MPL-2.0
+CLEANSWEEP's change to felucca-bsp's chip/usb.c (Leo Kuroshita, Hügelton Instruments, MPL-2.0), applied by
+tools/build.py to a copy in build/bsp/ so the submodule stays as published: optional settings for the vendor id, a
+fixed bcdDevice, no manufacturer string and a serial number, so CLEANSWEEP can present V15's USB identity (kata
+xbkc). Without them a build is byte for byte as before. Offered to felucca-bsp only if Drew asks.
+
+diff --git a/chip/usb.c b/chip/usb.c
+index 0b377b3..402951d 100644
+--- a/chip/usb.c
++++ b/chip/usb.c
+@@ -364,6 +364,29 @@ static uint32_t midi_out_room(void)                  /* free slots in the out ri
+ #ifndef FELUCCA_USB_PID
+ #define FELUCCA_USB_PID 0x0001   /* the update loader is 0x0002 */
+ #endif
++/* FELUCCA_USB_VID, FELUCCA_USB_BCD: the vendor id and a fixed bcdDevice in place of the computed one;
++ * FELUCCA_USB_NO_MANUFACTURER: no manufacturer string (iManufacturer 0); FELUCCA_USB_SERIAL: an expression giving
++ * the serial number as an ASCII string (string descriptor 3), read when the host asks (test build: kata xbkc). */
++#ifndef FELUCCA_USB_VID
++#define FELUCCA_USB_VID 0x1209
++#endif
++#ifdef FELUCCA_USB_BCD
++#define USB_BCD_LO(cdc) ((FELUCCA_USB_BCD) & 0xFF)
++#define USB_BCD_HI ((FELUCCA_USB_BCD) >> 8)
++#else
++#define USB_BCD_LO(cdc) BCD_LO(cdc)
++#define USB_BCD_HI BCD_HI
++#endif
++#ifdef FELUCCA_USB_NO_MANUFACTURER
++#define USB_IMANUFACTURER 0
++#else
++#define USB_IMANUFACTURER 1
++#endif
++#ifdef FELUCCA_USB_SERIAL
++#define USB_ISERIAL 3
++#else
++#define USB_ISERIAL 0
++#endif
+ #if FELUCCA_USB_LAYOUT < 0 || FELUCCA_USB_LAYOUT > 3
+ #error "FELUCCA_USB_LAYOUT is 0..3"
+ #endif
+@@ -494,8 +517,8 @@ static uint32_t midi_out_room(void)                  /* free slots in the out ri
+                      0x80 * (FELUCCA_UAC_MIDI_LAST == 1) + ((cdc) ? 0x01 + 2 * FELUCCA_USB_LAYOUT : 0))
+ #define BCD_HI (0x03 + (FELUCCA_UAC_MIDI_LAST == 2) + 2 * FELUCCA_UAC_IAD)
+ #define D_DEV(bcdusb, cls, sub, proto, cdc)                                                          \
+-    18, 1, (bcdusb) & 0xFF, (bcdusb) >> 8, (cls), (sub), (proto), 64, 0x09, 0x12, FELUCCA_USB_PID & 0xFF, \
+-    FELUCCA_USB_PID >> 8, BCD_LO(cdc), BCD_HI, 1, 2, 0, 1
++    18, 1, (bcdusb) & 0xFF, (bcdusb) >> 8, (cls), (sub), (proto), 64, FELUCCA_USB_VID & 0xFF, FELUCCA_USB_VID >> 8, \
++    FELUCCA_USB_PID & 0xFF, FELUCCA_USB_PID >> 8, USB_BCD_LO(cdc), USB_BCD_HI, USB_IMANUFACTURER, 2, USB_ISERIAL, 1
+ 
+ /* without the console (FELUCCA_CDC=0, or usb_cdc_on = 0): class 0, no IAD, as a plain USB-MIDI / audio device.
+  * FELUCCA_UAC_IAD=1: an IAD over the audio function (audio control + its collection), so the device is misc / IAD
+@@ -572,7 +595,7 @@ static const uint8_t STR2[] = {30, 3, 'F', 0, 'e', 0, 'l', 0, 'u', 0, 'c', 0, 'c
+ static const uint8_t STR2[] = {16, 3, 'F', 0, 'e', 0, 'l', 0, 'u', 0, 'c', 0, 'c', 0, 'a', 0};
+ #endif
+ 
+-#if defined(FELUCCA_USB_MANUFACTURER) || defined(FELUCCA_USB_PRODUCT)
++#if defined(FELUCCA_USB_MANUFACTURER) || defined(FELUCCA_USB_PRODUCT) || defined(FELUCCA_USB_SERIAL)
+ /* A string descriptor built from a plain ASCII string (the build settings FELUCCA_USB_MANUFACTURER and
+  * FELUCCA_USB_PRODUCT, e.g. -DFELUCCA_USB_PRODUCT='"CTL-1 FM-1"'), at most 31 characters. EP0 sends one
+  * descriptor at a time, so one buffer serves both. */
+@@ -645,6 +668,10 @@ static int get_desc(uint32_t wvalue, const uint8_t **d, uint16_t *l)
+             *d = STR2;
+             *l = sizeof STR2;
+             return 1;
++#endif
++#ifdef FELUCCA_USB_SERIAL
++        case 3:
++            return usb_str_desc(FELUCCA_USB_SERIAL, d, l);
+ #endif
+         default:
+             return 0;
