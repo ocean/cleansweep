@@ -329,7 +329,8 @@ static void app_main(void)
     fm1__pc_out(6, 0);                          /* the codec held off (fm1_audio.h): no sound at all */
     {
         uint32_t f = irq_save();
-        flash_ok = FL_FAR(fl_jedec_ram)() == 0x856014u;   /* the 1 MiB part every FM-1 has */
+        uint32_t id = FL_FAR(fl_jedec_ram)();
+        flash_ok = id == 0x856014u || id == 0xB36014u;  /* the FM-1's 1 MiB parts: P25Q80, UC25HQ80 since autumn 2026 */
         irq_restore(f);
     }
     lcd_init();
