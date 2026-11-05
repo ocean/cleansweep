@@ -11,7 +11,9 @@ python3 -I "$ROOT/tools/usr_data.py" --header "$ROOT/build/gen/usr_data.h" >/dev
 cc -std=c99 -O1 -Wall -Wextra -Werror -Wno-unused-function -fsanitize=address,undefined \
     -I"$ROOT/build/gen" "$ROOT/tests/reset_test.c" -o "$OUT/reset_test"
 "$OUT/reset_test"
-uv run --frozen --project "$ROOT" "$ROOT/tools/gen_screens.py" --out "$ROOT/build/gen" >/dev/null
+UV="$ROOT/.toolchain/uv/uv"                     # (the pinned uv where setup_toolchain.sh fetched one: a CI runner)
+[ -x "$UV" ] || UV=uv
+"$UV" run --frozen --no-default-groups --project "$ROOT" "$ROOT/tools/gen_screens.py" --out "$ROOT/build/gen" >/dev/null
 cc -std=c99 -O1 -Wall -Wextra -Werror -Wno-unused-function -fsanitize=address,undefined \
     -I"$ROOT/build/gen" "$ROOT/tests/look_test.c" -o "$OUT/look_test"
 "$OUT/look_test"

@@ -1,3 +1,19 @@
+# SPDX-License-Identifier: MPL-2.0
+# CLEANSWEEP: every external tool the build fetches, pinned, the same pins as ESTAMPIE's tools/toolchain.lock.
+# tools/setup_toolchain.sh reads this file and refuses anything whose SHA-256 (archives, binaries) or commit (git)
+# differs. To update a pin: check the release's signature or provenance where the project publishes one, wait out a
+# cooldown of about two weeks, record the new hash here, then run tools/osv_scan.sh.
+#
+# name         platform      version                        sha256 (file) | commit (git)                                       url
 jieli          any           20260730.1                     a1545cddbc451a06bac43eb5cd96d831470c42a97c5c0b1f98879a20fc7647bd  https://jl-update.oss-cn-shenzhen.aliyuncs.com/jieli-linux-toolchains-20260730.1.tar.xz
 ac79-sdk       git           AC79NN_SDK_V1.2.1_2023-12-13   d179b4484759423312073f5fbb232501aa491047                          https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK.git
-build-image    linux-amd64   cc-debian13:nonroot            e792ab3d241a468a4fd7519ddbbebe66b49b5f365771716ea688ad40b6c6f1c2  gcr.io/distroless/cc-debian13:nonroot
+# uv: makes .venv from uv.lock (hash-checked), and the Python 3.14 it runs on. Only where none is installed, e.g. a
+# fresh CI runner (tools/ci_release.sh); each archive's GitHub build attestation was verified before pinning
+# (gh attestation verify uv-....tar.gz --repo astral-sh/uv: signed by astral-sh/uv's release.yml).
+uv             darwin-arm64  0.13.1                         cfe454573412ff7380d15fc7dae5997ab53ffce72fce0a78e91ddbc84001acd2  https://github.com/astral-sh/uv/releases/download/0.13.1/uv-aarch64-apple-darwin.tar.gz
+uv             linux-x64     0.13.1                         eadd9d27c134ab5ac1ffd4473b97a741407f3ea238288f03121fc4deddf90220  https://github.com/astral-sh/uv/releases/download/0.13.1/uv-x86_64-unknown-linux-gnu.tar.gz
+# osv-scanner: the vulnerability scanner itself (tools/osv_scan.sh); hashes from the release's osv-scanner_SHA256SUMS.
+osv-scanner    darwin-arm64  2.7.0                          d4926ef8da134332543be276dff157e4c170f99ad91fc48e89448a8816bdf70b  https://github.com/google/osv-scanner/releases/download/v2.7.0/osv-scanner_darwin_arm64
+osv-scanner    linux-x64     2.7.0                          160c6253e2922e9e0a6a9771c5c4c40a4b3c6090b34a3cdd5e80c96cc2e4218b  https://github.com/google/osv-scanner/releases/download/v2.7.0/osv-scanner_linux_amd64
+# The container the JieLi tools run in on macOS / non-x86 hosts (tools/build.py): sha256 is the image index digest.
+build-image    linux-amd64   cc-debian13:nonroot            08476c244888bfb425bae1ae4dd7c17f093e972aab8426883d97f3c6f280f7c1  gcr.io/distroless/cc-debian13:nonroot

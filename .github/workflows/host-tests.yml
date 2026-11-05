@@ -1,0 +1,36 @@
+# CLEANSWEEP: the host tests on every push and pull request (tests/run_tests.sh): the reset on a pretend flash, with
+# a power cut at every erase and write, and the look and the lights on a pretend screen. No JieLi toolchain here (the
+# release workflow builds the firmware). Python and its packages are pinned (uv.lock).
+name: host tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch cancels the run still going.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  host-tests:
+    name: Host tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      # Every action pinned to a commit (a tag can be moved), its version in the comment.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e   # v10.3.2
+
+      # Python 3.14 and the packages in uv.lock, hash-checked (pyproject.toml); not the device group (ALSA).
+      - name: Python packages
+        run: uv sync --frozen --no-default-groups
+
+      - name: Host tests
+        run: tests/run_tests.sh

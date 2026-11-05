@@ -4,15 +4,15 @@
 """Build CLEANSWEEP: build/cleansweep.bin (the app), build/loader/ota.bin (felucca-bsp's update loader) and
 build/cleansweep.fwsc (the package any FM-1 installer takes).
 
-  uv run tools/build.py [--release N]
+  uv run tools/build.py [--release X.Y.Z]
 
---release N gives the package the identity FM-1_257NNN (dev builds FM-1_257000).
+--release X.Y.Z gives the package the identity FM-1_257NNN, NNN being X.Y.Z's number in RELEASES (dev builds
+FM-1_257000).
 
-The JieLi toolchain is Linux x86-64 only. JIELI_TOOLCHAIN points at it (default: ../estampie/.toolchain/jieli/
-toolchain, which ESTAMPIE's tools/setup_toolchain.sh fetches and checks against the same pin as tools/toolchain.lock
-here); on macOS each tool runs in the pinned distroless container (build-image in tools/toolchain.lock), with no
-network. AC79_SDK points at JieLi's AC79 SDK (default ../estampie/.toolchain/ac79-sdk): fm1pkg.py takes three of its
-files (Apache-2.0) for the package. The loader build and its wrapping follow fm1-base's tools/build.py (Charles
+The JieLi toolchain is Linux x86-64 only. JIELI_TOOLCHAIN points at it (default .toolchain/jieli/toolchain, which
+tools/setup_toolchain.sh fetches and checks against tools/toolchain.lock); on macOS each tool runs in the pinned
+distroless container (build-image in tools/toolchain.lock), with no network. AC79_SDK points at JieLi's AC79 SDK
+(default .toolchain/ac79-sdk): fm1pkg.py takes three of its files (Apache-2.0) for the package. The loader build and its wrapping follow fm1-base's tools/build.py (Charles
 Vestal, MPL-2.0).
 """
 import argparse
@@ -40,6 +40,9 @@ CFLAGS = ["-Os", "-ffunction-sections", "-fno-builtin", "-Wall", "-Werror", "-Wn
 INC = ["-Ibuild/bsp/chip", "-Ibsp/chip", "-Ibsp/boards/fm1", "-Ibuild/gen"]   # the patched copies first
 PATCHES = ROOT / "patches"          # CLEANSWEEP's changes to felucca-bsp, applied to copies (patch_bsp)
 NAME = "cleansweep"
+# Each release's number, the NNN of its identity FM-1_257NNN: a new version gets the next one, in the commit that's
+# tagged (tools/release.sh). Never reuse or change a published one: installers tell builds apart by it.
+RELEASES = {"1.0.0": 1}
 
 
 def lock(name):
@@ -51,10 +54,10 @@ def lock(name):
 
 
 def toolchain():
-    tc = Path(os.environ.get("JIELI_TOOLCHAIN") or ROOT.parent / "estampie" / ".toolchain" / "jieli" / "toolchain")
+    tc = Path(os.environ.get("JIELI_TOOLCHAIN") or ROOT / ".toolchain" / "jieli" / "toolchain")
     if not (tc / "pi32v2" / "bin" / "clang").exists():
-        raise SystemExit("JIELI_TOOLCHAIN must point at the JieLi Linux toolchain (the directory with pi32v2/ and "
-                         "common/), pinned in tools/toolchain.lock")
+        raise SystemExit("build: no JieLi toolchain: run tools/setup_toolchain.sh, or point JIELI_TOOLCHAIN at one "
+                         "(the directory with pi32v2/ and common/), pinned in tools/toolchain.lock")
     return tc.resolve()
 
 
@@ -181,10 +184,16 @@ def build_app(product):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--release", type=int, metavar="N", help="identity FM-1_257NNN (default 000: a dev build)")
+    ap.add_argument("--release", metavar="X.Y.Z", help="a release: identity FM-1_257NNN from RELEASES (default: a "
+                    "dev build, FM-1_257000)")
     a = ap.parse_args()
-    product = f"FM-1_257{(a.release or 0):03d}"
-    sdk = Path(os.environ.get("AC79_SDK") or ROOT.parent / "estampie" / ".toolchain" / "ac79-sdk")
+    if a.release and a.release not in RELEASES:
+        raise SystemExit(f"build: {a.release} has no number in RELEASES (tools/build.py); the next is "
+                         f"{max(RELEASES.values(), default=0) + 1}")
+    product = f"FM-1_257{RELEASES[a.release] if a.release else 0:03d}"
+    sdk = Path(os.environ.get("AC79_SDK") or ROOT / ".toolchain" / "ac79-sdk")
+    if not (sdk / "cpu" / "wl82" / "tools" / "uboot.boot").exists():
+        raise SystemExit(f"build: no JieLi AC79 SDK in {sdk}: run tools/setup_toolchain.sh, or set AC79_SDK")
     GEN.mkdir(parents=True, exist_ok=True)
     py = [sys.executable, "-I"]
     subprocess.run([*py, ROOT / "tools" / "usr_data.py", "--header", GEN / "usr_data.h"], check=True)

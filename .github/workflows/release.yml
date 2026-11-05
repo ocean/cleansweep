@@ -1,0 +1,31 @@
+# CLEANSWEEP: a release, built, signed and released by GitHub. A pushed tag vX.Y.Z (tools/release.sh X.Y.Z --publish)
+# runs the FM-1 Firmware Hub's shared workflow, zvenson/fm1-build (reviewed: 144 lines, every action pinned). It checks
+# out this commit, runs tools/ci_release.sh (CLEANSWEEP's own pinned toolchain and felucca-bsp at its pinned commit,
+# not the toolchain it downloads) and the host tests, signs a build attestation for every file in build/dist/ (the
+# package, the app and the package's .sha256) and makes the release. Check a release, and that this machine builds
+# the same files: tools/verify_release.sh. Run by hand (Actions > release > Run workflow): a dry run, built and
+# signed but not released.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  build:
+    # @v1, not a commit: the hub gives its badge to this tag only (it promises never to move it; v1 is
+    # 85a003ab455b1c074b0bd6d7c282c096a464b973), as ESTAMPIE uses it (zvenson/fm1-build#1 asks it to accept the
+    # commit). What it can do here: write releases and sign, in this repository only; it is given no secrets.
+    uses: zvenson/fm1-build/.github/workflows/build.yml@v1   # zizmor: ignore[unpinned-uses]
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    with:
+      build: tools/ci_release.sh "$GITHUB_REF_NAME"
+      packages: build/dist/*
+      test: tests/run_tests.sh
+      sdk: false                         # (tools/ci_release.sh checks out the pinned SDK commit itself)

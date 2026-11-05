@@ -1,0 +1,45 @@
+# CLEANSWEEP: the supply-chain checks on every push and pull request, and weekly, so a vulnerability published after
+# a dependency was locked still turns up:
+#   osv-scanner (pinned by SHA-256 in tools/toolchain.lock) over uv.lock and the pinned build image, whose newer
+#   image is scanned too (tools/osv_scan.sh);
+#   zizmor (pinned in uv.lock) over these workflows: pinning, permissions, injection, impostor commits.
+name: supply chain
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "29 3 * * 1"
+
+permissions: {}
+
+# A newer push to the same branch cancels the run still going.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    name: Vulnerabilities and workflow audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      # Every action pinned to a commit (a tag can be moved), its version in the comment.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e   # v10.3.2
+
+      - name: osv-scanner (checked against tools/toolchain.lock)
+        run: tools/setup_toolchain.sh --only osv-scanner
+
+      - name: Known vulnerabilities (Python, build image)
+        run: tools/osv_scan.sh python build-image
+
+      - name: Workflow audit (zizmor)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: uv run --frozen --only-group audit zizmor --format github .github/workflows

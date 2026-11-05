@@ -13,6 +13,12 @@ else: it makes no sound.
 **Status: tested on an FM-1:** from V15, V16 and MIDIMON, through power cuts, and back to V15 and V16 (results in
 [HARDWARE_TESTING.md](HARDWARE_TESTING.md)). Not yet released.
 
+**Please don't list it on firmware directory sites or hubs.** It's a repair tool for one problem, and it erases
+saved data, so it's for people who've been pointed to it for that problem, not a firmware to try. Link to this page
+instead.
+
+Releases are built and signed by GitHub from this repository, and anyone can rebuild them byte for byte
+([docs/SECURITY.md](docs/SECURITY.md) says how to check one). Install the `.fwsc` file with any FM-1 installer.
 How it works and how to build it: [docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md).
 
 ## Licence

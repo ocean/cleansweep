@@ -6,7 +6,14 @@ It's maintained by Drew Robinson (GitHub `ocean`), built by the ESTAMPIE agent s
 
 - **It erases flash.** Only [0x93000, 0xFC000) may ever be erased or programmed: `FL_RANGE_OK` in
   `firmware/cleansweep.c` makes the flash driver refuse anything else. Don't widen it without Drew.
-- **Tests before every commit:** `tests/run_tests.sh`, and `uv run tools/build.py` must build.
+- **Tests before every commit:** `tests/run_tests.sh`, and `uv run tools/build.py` must build. `tools/setup_toolchain.sh`
+  fetches the pinned toolchain into `.toolchain/` first.
+- **Releases** are built and signed by GitHub (docs/SECURITY.md): a version gets its number in `RELEASES`
+  (`tools/build.py`), then `tools/release.sh X.Y.Z --publish` tags it. Publishing is Drew's call; a dry run
+  (Actions › release › Run workflow) is signed but not released. Every action pinned to a commit, every download in
+  `tools/toolchain.lock`; `tools/osv_scan.sh` and zizmor run in CI.
+- **Not for directories:** CLEANSWEEP isn't listed on firmware directory sites or hubs (README.md). Don't add it to
+  one, or add a hub listing file.
 - **The look:** `firmware/look.c` and `firmware/lights.c` hold no hardware; `uv run tools/preview.py` shows a start
   as the firmware draws it. The words are Cooper Hewitt italic, pinned by SHA-256 in `tools/gen_screens.py`.
 - **Hardware** is tested by Drew only (HARDWARE_TESTING.md). Before he does, `uv run tools/hw_check.py` runs the
