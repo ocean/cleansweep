@@ -136,7 +136,8 @@ static void test_reset(void)
 static void test_power_cuts(void)
 {
     rs_result_t r;
-    uint32_t total, k, worst = 0;
+    uint32_t total;
+    volatile uint32_t k, worst = 0;   /* (across the longjmp of a power cut: gcc's -Wclobbered) */
     fill_random();
     ops = 0;
     cut_at = 0;
@@ -168,7 +169,7 @@ static void test_power_cuts(void)
 static void test_repeated_cuts(void)
 {
     rs_result_t r;
-    uint32_t round, n;
+    volatile uint32_t round, n;       /* (across the longjmp of a power cut: gcc's -Wclobbered) */
     for (round = 0; round < 200u; round++) {
         fill_random();
         for (n = 0; n < 3u; n++) {
