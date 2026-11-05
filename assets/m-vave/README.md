@@ -7,7 +7,7 @@ puts it in the firmware, which writes it at 0xEA000.
 | | |
 | --- | --- |
 | Source | <https://github.com/m-vave/fm1_open>, `sdk/firmware/FM-1_015.fwsc`, commit `3be7fbdbd3bb137bacbd65d68412c210eb977870` |
-| Also | <https://www.m-vave.com/download> (PC Firmware / FM-1 V15), the same file |
+| Not | <https://www.m-vave.com/download>: it served this same file until about 23 October 2026, and serves V16 now |
 | Size | 699956 bytes |
 | SHA-256 | `db1642b2b6fa5c2cccb11ffd13878068bb28601678d3644049f99dc40e7edb8a` |
 | Licence | Apache License, Version 2.0 (`LICENSES/Apache-2.0.txt`) |

@@ -14,7 +14,7 @@ index 0b377b3..402951d 100644
  #endif
 +/* FELUCCA_USB_VID, FELUCCA_USB_BCD: the vendor id and a fixed bcdDevice in place of the computed one;
 + * FELUCCA_USB_NO_MANUFACTURER: no manufacturer string (iManufacturer 0); FELUCCA_USB_SERIAL: an expression giving
-+ * the serial number as an ASCII string (string descriptor 3), read when the host asks (test build: kata xbkc). */
++ * the serial number as an ASCII string (string descriptor 3), read when the host asks. */
 +#ifndef FELUCCA_USB_VID
 +#define FELUCCA_USB_VID 0x1209
 +#endif

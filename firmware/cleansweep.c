@@ -21,7 +21,7 @@
 #ifndef FELUCCA_ID
 #define FELUCCA_ID "FM-1_257000"      /* the identity the installer sees, == the package's (tools/build.py) */
 #endif
-/* V15's USB identity (kata xbkc, a test build): its ids and bcdDevice, the product "FM-1", no manufacturer, and the
+/* V15's USB identity (kata xbkc): its ids and bcdDevice, the product "FM-1", no manufacturer, and the
  * flash's unique ID as the serial number, in hex, as V15 and download mode give it. */
 #define FELUCCA_USB_VID 0x4C4A
 #define FELUCCA_USB_PID 0xC755

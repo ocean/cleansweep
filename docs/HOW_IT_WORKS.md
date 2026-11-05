@@ -24,6 +24,10 @@ Every time it starts:
    firmware: V15 (its voices are already back), V16 (which starts
    fresh on its own voices, PIANO 3 first: seen on hardware, 3 Nov), or anything else.
 
+The one picture holds until that install: installing from CLEANSWEEP stages the next firmware's update loader at
+0xE0000–0xE4FFF (felucca-bsp's `ota.c`), inside the range, and it stays there. V15 and V16 were fine with it on the
+FM-1.
+
 What it never touches: the boot area and its own image (below 0x93000), Felucca's store at 0xFC000–0xFEFFF (where
 Melodee and LOOM keep their Bluetooth details) and 0xFF000. The flash driver itself refuses anything outside the range.
 It makes no sound at all: the audio is never started.
@@ -65,15 +69,16 @@ its interfaces differ from V15's, and macOS asks once per Mac whether to allow t
 ## Build
 
     git submodule update --init
-    uv sync --frozen
+    tools/setup_toolchain.sh       # once: the pinned toolchain into .toolchain/, Python into .venv/
     tests/run_tests.sh
     uv run tools/build.py          # build/cleansweep.fwsc
     uv run tools/preview.py        # build/preview/start.gif: what a start looks like
     uv run tools/hw_check.py       # the package on emulated FM-1 hardware, about a minute
 
-The JieLi toolchain and AC79 SDK are the ones ESTAMPIE's `tools/setup_toolchain.sh` fetches and checks
-(`tools/toolchain.lock` has the same pins); `JIELI_TOOLCHAIN` and `AC79_SDK` point elsewhere. On macOS the tools run in
-the pinned distroless container, with no network, so Docker must be running.
+`tools/setup_toolchain.sh` fetches the JieLi toolchain and AC79 SDK into `.toolchain/` and checks each against
+`tools/toolchain.lock` (ESTAMPIE's pins); `JIELI_TOOLCHAIN` and `AC79_SDK` point elsewhere. On macOS the tools run in
+the pinned distroless container, with no network, so Docker must be running. Releases are built and signed by GitHub
+(`tools/release.sh`, `.github/workflows/release.yml`); [SECURITY.md](SECURITY.md) has how, and how to check one.
 
 `tools/hw_check.py` boots the built package on [shcherbakov7's emulator of the FM-1's
 hardware](https://github.com/shcherbakov7/m-wave-fm1-browser-emulator) (GPL-3.0, run, not included), the copy
