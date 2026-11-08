@@ -366,3 +366,14 @@ static void lk_bar(uint32_t done, uint32_t total, uint32_t min_ms)
         lk_idle();
     } while (lk_ms() - t0 < min_ms);
 }
+
+/* the bar at done of total with no fizz and no wait, for the update loader: it only ever goes forward, and the
+ * loader can't stop writing for a frame */
+static void lk_bar_plain(uint32_t done, uint32_t total)
+{
+    uint32_t was = lk_bar_px, px = total ? done * LK_BAR_W / total : 0;
+    if (px <= was)
+        return;
+    lk_bar_px = px;
+    lk_redraw(LK_BAR_X + (int32_t)was - 4, CS_BAR_Y, (int32_t)(px - was) + 5, CS_BAR_H);
+}

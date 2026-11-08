@@ -173,12 +173,13 @@ static void test_start(void)
 
 static void test_screens(void)
 {
+    uint32_t i;
     lk_screen(&TX_WRONG, &TX_AGAIN, 0);
     lk_hex(lk_hex(LK_W / 2 - 4 * (int32_t)CS_DIGIT_W, 4, 1) + (int32_t)CS_DIGIT_W, 0xA0000u, 5);
     same_as_fresh("the error's digits");
     if (frames_dir)
         dump("wrong.raw");
-    lk_screen(&TX_INSTALLING, 0, 0);
+    lk_screen(&TX_INSTALLING, &TX_DARK, 0);
     lk_bar_start();
     lk_bar(1, 5, 0);
     lk_bar(3, 5, 200);
@@ -190,6 +191,16 @@ static void test_screens(void)
     lk_screen(&TX_WRONG, &TX_STOPPED, 0);
     if (frames_dir)
         dump("stopped.raw");
+    lk_screen(&TX_WRITING, &TX_PLUGGED_IN, 0);           /* the update loader's: the bar with no fizz */
+    lk_bar_start();
+    for (i = 0; i <= 1000u; i += 7u) {
+        lk_bar_plain(i, 1000);
+        if (i == 602u && frames_dir)
+            dump("writing.raw");
+    }
+    same_as_fresh("the loader's bar on its way");
+    lk_bar_plain(1000, 1000);
+    same_as_fresh("the loader's bar at the end");
 }
 
 int main(int argc, char **argv)

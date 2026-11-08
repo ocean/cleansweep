@@ -24,6 +24,17 @@ Every time it starts:
    firmware: V15 (its voices are already back), V16 (which starts
    fresh on its own voices, PIANO 3 first: seen on hardware, 3 Nov), or anything else.
 
+**During an install** the screen says the firmware is installing from the moment the installer starts, with a bar for
+the staging. That takes about a second; then CLEANSWEEP leaves USB, holds the words for 3 s more and resets into the
+next firmware's update loader. Installers see only a slightly longer wait. The reset leaves PA2, the backlight,
+undriven, and M-VAVE's loader has no display code; the only pins it sets for itself come from a `POWER_PIN` setting
+in the boot area, out of CLEANSWEEP's reach. So a V15 or V16 install is dark until the new firmware starts. The panel keeps its picture
+through that, which is why the install screen can flash up as the new firmware takes over.
+
+Each package brings its own update loader, so only CLEANSWEEP's own install runs CLEANSWEEP's. That loader is
+felucca-bsp's, with Charles Vestal's screen drawn by `look.c` instead: the violet, the name and a bar without the
+sparks, because the loader can't stop writing for a frame.
+
 The one picture holds until that install: installing from CLEANSWEEP stages the next firmware's update loader at
 0xE0000–0xE4FFF (felucca-bsp's `ota.c`), inside the range, and it stays there. V15 and V16 were fine with it on the
 FM-1.
@@ -56,7 +67,7 @@ FM-1 on them first.
 | `tools/gen_screens.py` | Draws the screen's words in Cooper Hewitt italic ([assets/fonts](../assets/fonts/README.md)). |
 | `tools/build.py` | Builds the update loader, the app and the package. |
 | `bsp/` | [felucca-bsp](https://github.com/hugelton/felucca-bsp), pinned as a submodule. Its update check takes V15, V16, m-bootloader and Felucca-platform firmwares over any bootloader. |
-| `patches/` | CLEANSWEEP's changes to felucca-bsp, applied by `tools/build.py` to copies in `build/bsp/`, so the submodule stays as published. One so far: settings in `chip/usb.c` for the USB identity below. |
+| `patches/` | CLEANSWEEP's changes to felucca-bsp, applied by `tools/build.py` to copies in `build/bsp/`, so the submodule stays as published. Two so far: settings in `chip/usb.c` for the USB identity below, and the update loader's screen in `loader/ldr_screen.c`. |
 
 The identity is **FM-1_257000** for development builds, and FM-1_257NNN for releases, so installers can tell it from
 V15 and everything else. 257 spells CLS on a phone keypad (ESTAMPIE's 378 spells EST).

@@ -19,6 +19,7 @@ import argparse
 import os
 import platform
 import re
+import shutil
 import struct
 import subprocess
 import sys
@@ -121,7 +122,8 @@ def build_loader():
     LDR.mkdir(parents=True, exist_ok=True)
     src = BSP / "loader"
     tc("cc", "-c", src / "crt0_ldr.S", "-o", LDR / "crt0_ldr.o")
-    tc("cc", *CFLAGS, "-Ibsp/chip", "-Ibsp/boards/fm1", "-c", src / "loader.c", "-o", LDR / "loader.o")
+    shutil.copy(src / "loader.c", OUT / "bsp" / "loader")   # beside the patched ldr_screen.c, which it includes
+    tc("cc", *CFLAGS, "-Ibsp/loader", "-Ifirmware", *INC, "-c", OUT / "bsp" / "loader" / "loader.c", "-o", LDR / "loader.o")
     elf = LDR / "loader.elf"
     tc("pi32v2/bin/ld", "--gc-sections", "-e", "_start", "-T", src / "loader.ld",
        LDR / "crt0_ldr.o", LDR / "loader.o", "-o", elf)
@@ -139,8 +141,7 @@ def build_loader():
 
 
 def patch_bsp():
-    """the app's felucca-bsp files with patches/*.patch applied, as copies in build/bsp/ (the submodule stays as
-    published; the loader is built from it unpatched)"""
+    """felucca-bsp's files with patches/*.patch applied, as copies in build/bsp/ (the submodule stays as published)"""
     out = OUT / "bsp"
     for patch in sorted(PATCHES.glob("*.patch")):
         for f in re.findall(r"^\+\+\+ b/(\S+)$", patch.read_text(), re.M):
@@ -198,8 +199,8 @@ def main():
     py = [sys.executable, "-I"]
     subprocess.run([*py, ROOT / "tools" / "usr_data.py", "--header", GEN / "usr_data.h"], check=True)
     subprocess.run([sys.executable, ROOT / "tools" / "gen_screens.py", "--out", GEN], check=True)
-    ota = build_loader()
     patch_bsp()
+    ota = build_loader()
     img = build_app(product)
     (OUT / f"{NAME}.bin").write_bytes(img)
     pkg = OUT / f"{NAME}.fwsc"

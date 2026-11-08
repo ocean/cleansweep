@@ -143,7 +143,7 @@ static void lk_row(uint16_t *px, uint32_t w)
 
 static uint32_t lk_ms(void) { return ms; }
 
-/* The panel takes a moment to show the violet after M-VAVE's loader screen: with no wait the show was half over
+/* The panel takes a moment to show the violet after the update loader's screen: with no wait the show was half over
  * before it was visibly ours, and 500 ms left the violet still coming on (Drew, on hardware). */
 #define START_WAIT_MS 580u
 
@@ -245,7 +245,7 @@ static int ota_fread(uint32_t off, void *p, uint32_t n)
 static void ota_show(uint32_t step, int32_t code)
 {
     if (step == 1u) {
-        lk_screen(&TX_INSTALLING, 0, 0);
+        lk_screen(&TX_INSTALLING, &TX_DARK, 0);
         lk_bar_start();
     }
     if (step < 9u)
@@ -253,12 +253,17 @@ static void ota_show(uint32_t step, int32_t code)
     else if (code != 1)
         lk_screen(&TX_WRONG, &TX_STOPPED, 0);
 }
+/* The reset ends the screen: PA2, the backlight, comes back undriven and M-VAVE's loader has no display code, so
+ * the FM-1 stays dark until the next firmware starts (kata h3k6). Staging takes about a second, too short to read
+ * that, so the words stay up a little longer. Installers look for the loader for 30 s or more. */
+#define OTA_HOLD_MS 3000u
+
 static void ota_commit(const uint8_t *parm)
 {
     guard.pending = 0;                          /* an intentional reset, not a failed start */
     guard.failed = 0;
-    usb_detach();
-    fm1_delay_ms(30);
+    usb_detach();                               /* off USB first: to an installer nothing but the wait changes */
+    lk_bar(5, 5, OTA_HOLD_MS);
     fm1_enter_update(parm);
 }
 

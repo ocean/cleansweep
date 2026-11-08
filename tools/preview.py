@@ -96,10 +96,10 @@ def main():
     subprocess.run([exe, "--frames", raw], check=True)
     frames = [frame(f.read_bytes()) for f in sorted(raw.glob("f*.raw"))]
     frames[0].save(a.out / "start.gif", save_all=True, append_images=frames[1:], duration=40, loop=0)
-    for name in ("wrong", "installing", "stopped"):
+    for name in ("wrong", "installing", "writing", "stopped"):
         screen((raw / f"{name}.raw").read_bytes()).save(a.out / f"{name}.png")
     frames[-1].save(a.out / "done.png")
-    print(f"preview: {a.out / 'start.gif'} ({len(frames)} frames), done.png, wrong.png, installing.png, stopped.png")
+    print(f"preview: {a.out / 'start.gif'} ({len(frames)} frames), done.png, wrong.png, installing.png, writing.png, stopped.png")
     return 0
 
 

@@ -39,7 +39,10 @@ TEXTS = {
     "bluetooth": (14, "Medium", 180, ["Bluetooth devices will need pairing again: forget the FM-1 on them first, then pair."]),
     "wrong":    (19, "Semibold", 102, ["Something went wrong."]),
     "again":    (16, "Medium", 130, ["Turn the FM-1 off and on again to try again."]),
-    "installing": (19, "Semibold", 102, ["Installing your next firmware…"]),
+    "installing": (19, "Semibold", 102, ["Installing firmware…"]),
+    "dark":     (16, "Medium", 130, ["The screen may go dark for a while. Leave the cable in."]),
+    "writing":  (19, "Semibold", 102, ["Installing…"]),
+    "plugged_in": (16, "Medium", 130, ["Please leave the FM-1 plugged in."]),
     "stopped":  (16, "Medium", 130, ["The install stopped. Nothing has changed: you can try it again."]),
     "digits":   (16, "Semibold", 214, ["0123456789ABCDEF"]),
 }
@@ -49,7 +52,8 @@ SCREENS = {                    # what the firmware shows together, for the overl
     "clearing": ["clean", "sweep", "clearing", "leave_on", "BAR"],
     "done": ["clean", "sweep", "done", "next", "bluetooth"],
     "wrong": ["clean", "sweep", "wrong", "again", "digits"],
-    "installing": ["clean", "sweep", "installing", "BAR"],
+    "installing": ["clean", "sweep", "installing", "dark", "BAR"],
+    "writing": ["clean", "sweep", "writing", "plugged_in", "BAR"],
     "stopped": ["clean", "sweep", "wrong", "stopped"],
 }
 
