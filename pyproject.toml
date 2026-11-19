@@ -19,7 +19,7 @@ device = [
 # Supply-chain checks (tools/osv_scan.sh runs osv-scanner; this lints the GitHub workflows):
 #   uv run --group audit zizmor .github/workflows
 audit = [
-    "zizmor==1.31.1",
+    "zizmor==1.32.0",
 ]
 
 [tool.uv]
